@@ -1,2 +1,3 @@
-0.0
-Bike,B001,yamaha ,i3,1000.0,true
+4300.0
+Bike,B001,yamaha ,i3,1000.0,false
+Car,C001,BMW,i8,3000.0,true
