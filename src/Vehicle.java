@@ -1,34 +1,34 @@
-public abstract class Vehicle{
+public abstract class Vehicle {
     private String vehicleId;
     private String brand;
     private String model;
     private double baseRatePerDay;
     private boolean isAvailable;
 
-    public Vehicle(String vehicleId, String brand, String model, double baseRatePerDay){
+    public Vehicle(String vehicleId, String brand, String model, double baseRatePerDay) {
         this.vehicleId = vehicleId;
         this.brand = brand;
         this.model = model;
         this.baseRatePerDay = baseRatePerDay;
-        this.isAvailable = true;
+        this.isAvailable = true; // default available
     }
 
-
-
-    public String getVehicleId(){
+    // Getters and Setters
+    public String getVehicleId() {
         return vehicleId;
     }
-    public void setVehicleId(String vehicleId){
+    public void setVehicleId(String vehicleId) {
         this.vehicleId = vehicleId;
     }
 
 
-    public String getBrand(){
+    public String getBrand() {
         return brand;
     }
-    public void setBrand(String brand){
+    public void setBrand(String brand) {
         this.brand = brand;
     }
+
 
 
     public String getModel() {
@@ -46,12 +46,14 @@ public abstract class Vehicle{
         this.baseRatePerDay = baseRatePerDay;
     }
 
+
     public boolean isAvailable() {
         return isAvailable;
     }
     public void setAvailable(boolean available) {
         isAvailable = available;
     }
+
 
     public void displayDetails() {
         System.out.println("ID: " + vehicleId +
@@ -66,7 +68,7 @@ public abstract class Vehicle{
             isAvailable = false;
             System.out.println("Vehicle rented successfully.");
         } else {
-            System.out.println("Vehicle is already rented");
+            System.out.println("Vehicle is already rented!");
         }
     }
 
@@ -80,5 +82,4 @@ public abstract class Vehicle{
     }
 
     public abstract double calculateRentalCost(int days);
-
 }
