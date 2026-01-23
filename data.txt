@@ -1,0 +1,2 @@
+0.0
+Bike,B001,yamaha ,i3,1000.0,true
