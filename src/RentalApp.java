@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 
-public class RentalApp {
+    public class RentalApp {
     private static ArrayList<Vehicle> vehicles = new ArrayList<>();
     private static double totalIncome = 0;
 
@@ -11,8 +11,13 @@ public class RentalApp {
 
         TextArt.showBanner();
 
-
+//        clearConsole();
         totalIncome = FileManager.load(vehicles);
+
+        final String BLUE = "\u001B[34m";
+        final String RESET = "\u001B[0m";
+        final String  RED = "\u001B[31m";
+        final String GREEN  = "\u001B[32m";
 
         int choice;
         do {
@@ -24,7 +29,9 @@ public class RentalApp {
             System.out.println("5. Search Vehicle by ID");
             System.out.println("6. View Total Rental Income");
             System.out.println("7. Exit");
-            System.out.print("Enter your choice: ");
+            System.out.print(BLUE+"Enter your choice: "+RESET);
+
+
 
             try {
                 choice = Integer.parseInt(sc.nextLine());
@@ -54,9 +61,18 @@ public class RentalApp {
     }
 
     private static void addVehicle(Scanner sc) {
+
+
+        final String RESET = "\u001B[0m";
+        final String  RED = "\u001B[31m";
+        final String  YELLOW = "\u001B[33m";
+
+
+
         System.out.println("  1. Car");
         System.out.println("  2. Bike");
         System.out.println("  3. Van");
+        System.out.println(RED+"Place Enter the Vehicle Name...!"+RESET);
         String type = sc.nextLine();
         System.out.print("Enter Vehicle ID: "); String id = sc.nextLine();
 
@@ -65,9 +81,13 @@ public class RentalApp {
             return;
         }
 
+
+
         System.out.print("Enter Brand: "); String brand = sc.nextLine();
         System.out.print("Enter Model: "); String model = sc.nextLine();
         System.out.print("Enter Base Rate: "); double rate = Double.parseDouble(sc.nextLine());
+
+
 
         Vehicle v = switch (type.toLowerCase()) {
             case "car" -> {
@@ -83,7 +103,7 @@ public class RentalApp {
                 yield new Van(id, brand, model, rate, cargo);
             }
             default -> {
-                System.out.println("Unknown vehicle type!");
+                System.out.println(RED+"Unknown vehicle type!"+RESET);
                 yield null;
             }
         };
@@ -91,7 +111,7 @@ public class RentalApp {
         if (v != null) {
             vehicles.add(v);
             System.out.println("Vehicle added successfully!");
-            // Save after adding
+
             FileManager.save(vehicles, totalIncome);
         }
     }

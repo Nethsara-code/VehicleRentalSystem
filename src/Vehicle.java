@@ -10,10 +10,10 @@ public abstract class Vehicle {
         this.brand = brand;
         this.model = model;
         this.baseRatePerDay = baseRatePerDay;
-        this.isAvailable = true; // default available
+        this.isAvailable = true;
     }
 
-    // Getters and Setters
+
     public String getVehicleId() {
         return vehicleId;
     }
