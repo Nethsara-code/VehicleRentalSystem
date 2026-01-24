@@ -13,7 +13,12 @@ public class RentalApp {
 
         int choice;
         do {
-            System.out.println("\n=== Vehicle Rental System ===");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+
+
             System.out.println("1. Add Vehicle");
             System.out.println("2. View All Vehicles");
             System.out.println("3. Rent a Vehicle");
@@ -112,7 +117,7 @@ public class RentalApp {
         final String CYAN = "\u001B[36m";
         final String YELLOW = "\u001B[33m";
 
-        System.out.println(YELLOW+"\n==================="+RESET+CYAN+"Vehicle List"+RESET+YELLOW+"==================="+RESET);
+        System.out.println(YELLOW+"\n================"+RESET+CYAN+"Vehicle List"+RESET+YELLOW+"================"+RESET);
         System.out.println(" ");
         System.out.printf("%-10s %-12s %-12s %-10s %-10s\n", "ID", "Brand", "Model", "Rate", "Available");
         System.out.println("----------------------------------------------------------");
@@ -156,7 +161,6 @@ public class RentalApp {
         totalIncome += v.calculateRentalCost(days);
         System.out.println("Rental cost: " + v.calculateRentalCost(days));
 
-        // Save after renting
         FileManager.save(vehicles, totalIncome);
     }
 
@@ -170,7 +174,7 @@ public class RentalApp {
         }
 
         v.returnVehicle();
-        // Save after returning
+
         FileManager.save(vehicles, totalIncome);
     }
 
