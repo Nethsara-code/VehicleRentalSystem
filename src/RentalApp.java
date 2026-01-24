@@ -9,34 +9,43 @@ public class RentalApp {
         Scanner sc = new Scanner(System.in);
 
         TextArt.showBanner();
+        System.out.println(" ");
+        System.out.println(" ");
+
+
         totalIncome = FileManager.load(vehicles);
 
         int choice;
         do {
-            System.out.println(" ");
-            System.out.println(" ");
-            System.out.println(" ");
-            System.out.println(" ");
+
+            String[] menu = {
+                    " ",
+                    "1. Add Vehicle",
+                    " ",
+                    "2. View All Vehicles",
+                    " ",
+                    "3. Rent a Vehicle",
+                    " ",
+                    "4. Return a Vehicle",
+                    " ",
+                    "5. Search Vehicle by ID",
+                    " ",
+                    "6. View Total Rental Income",
+                    " ",
+                    "7. Exit",
+                    " "
+            };
 
 
-            System.out.println("1. Add Vehicle");
-            System.out.println("2. View All Vehicles");
-            System.out.println("3. Rent a Vehicle");
-            System.out.println("4. Return a Vehicle");
-            System.out.println("5. Search Vehicle by ID");
-            System.out.println("6. View Total Rental Income");
-            System.out.println("7. Exit");
+            drawBox(menu);
             System.out.print("Enter your choice: ");
-
 
             try {
                 choice = Integer.parseInt(sc.nextLine());
-
+                System.out.println();
                 System.out.println(" ");
                 System.out.println(" ");
                 System.out.println(" ");
-                System.out.println(" ");
-
 
                 switch (choice) {
                     case 1 -> addVehicle(sc);
@@ -44,9 +53,8 @@ public class RentalApp {
                     case 3 -> rentVehicle(sc);
                     case 4 -> returnVehicle(sc);
                     case 5 -> searchVehicle(sc);
-                    case 6 -> System.out.println("Total Rental Income: " + totalIncome);
+                    case 6 -> System.out.println("Total Rental Income: Rs." + totalIncome);
                     case 7 -> {
-                        // Save data before exit
                         FileManager.save(vehicles, totalIncome);
                         System.out.println("Exiting and saving data...");
                     }
@@ -59,35 +67,68 @@ public class RentalApp {
 
         } while (choice != 7);
 
-
         sc.close();
+    }
+
+
+    // Draw box for menu
+
+    private static void drawBox(String[] lines) {
+        int width = 0;
+        for (String line : lines) {
+            if (line.length() > width) width = line.length();
+        }
+
+        // Top border
+        System.out.print("┌");
+        for (int i = 0; i < width + 2; i++) System.out.print("─");
+        System.out.println("┐");
+
+
+        for (String line : lines) {
+            System.out.print("│ " + line);
+            for (int i = 0; i < width - line.length(); i++) System.out.print(" ");
+            System.out.println(" │");
+        }
+
+
+        System.out.print("└");
+        for (int i = 0; i < width + 2; i++) System.out.print("─");
+        System.out.println("┘");
     }
 
     private static void addVehicle(Scanner sc) {
         System.out.print("Enter type (Car/Bike/Van): ");
         String type = sc.nextLine();
-        System.out.print("Enter Vehicle ID: "); String id = sc.nextLine();
+        System.out.print("Enter Vehicle ID: ");
+        String id = sc.nextLine();
 
         if (searchById(id) != null) {
             System.out.println("Vehicle ID already exists!");
             return;
         }
 
-        System.out.print("Enter Brand: "); String brand = sc.nextLine();
-        System.out.print("Enter Model: "); String model = sc.nextLine();
-        System.out.print("Enter Base Rate: "); double rate = Double.parseDouble(sc.nextLine());
+        System.out.print("Enter Brand: ");
+        String brand = sc.nextLine();
+        System.out.print("Enter Model: ");
+        String model = sc.nextLine();
+        System.out.print("Enter Base Rate: ");
+        double rate = Double.parseDouble(sc.nextLine());
 
         Vehicle v = switch (type.toLowerCase()) {
             case "car" -> {
-                System.out.print("Enter number of seats: "); int seats = Integer.parseInt(sc.nextLine());
+                System.out.print("Enter number of seats: ");
+                int seats = Integer.parseInt(sc.nextLine());
                 yield new Car(id, brand, model, rate, seats);
             }
             case "bike" -> {
-                System.out.print("Enter engine capacity CC: "); int cc = Integer.parseInt(sc.nextLine());
+                System.out.print("Enter engine capacity CC: ");
+                int cc = Integer.parseInt(sc.nextLine());
                 yield new Bike(id, brand, model, rate, cc);
             }
             case "van" -> {
-                System.out.print("Enter cargo capacity kg: "); double cargo = Double.parseDouble(sc.nextLine());
+                System.out.print("Enter cargo capacity kg: ");
+                double cargo = Double.parseDouble(sc.nextLine());
                 yield new Van(id, brand, model, rate, cargo);
             }
             default -> {
@@ -101,7 +142,6 @@ public class RentalApp {
             System.out.println("Vehicle added successfully!");
             FileManager.save(vehicles, totalIncome);
         }
-
     }
 
     private static void viewVehicles() {
@@ -113,12 +153,9 @@ public class RentalApp {
         final String RESET = "\u001B[0m";
         final String GREEN = "\u001B[32m";
         final String RED = "\u001B[31m";
-        final String BLUE = "\u001B[34m";
-        final String CYAN = "\u001B[36m";
         final String YELLOW = "\u001B[33m";
 
-        System.out.println(YELLOW+"\n================"+RESET+CYAN+"Vehicle List"+RESET+YELLOW+"================"+RESET);
-        System.out.println(" ");
+        System.out.println(YELLOW + "\n================ Vehicle List ================" + RESET);
         System.out.printf("%-10s %-12s %-12s %-10s %-10s\n", "ID", "Brand", "Model", "Rate", "Available");
         System.out.println("----------------------------------------------------------");
 
@@ -128,33 +165,27 @@ public class RentalApp {
                     v.getBrand(),
                     v.getModel(),
                     v.getBaseRatePerDay(),
-                    v.isAvailable() ? GREEN+"Yes"+RESET : RED+"No"+RESET
+                    v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
             );
         }
-        System.out.println(" ");
-        System.out.println(" ");
-        System.out.println(" ");
-        System.out.println(" ");
+        System.out.println();
     }
 
     private static void rentVehicle(Scanner sc) {
-
         final String RESET = "\u001B[0m";
         final String GREEN = "\u001B[32m";
         final String RED = "\u001B[31m";
-        final String BLUE = "\u001B[34m";
-        final String CYAN = "\u001B[36m";
         final String YELLOW = "\u001B[33m";
 
         System.out.print("Enter Vehicle ID to rent: ");
         String id = sc.nextLine();
         Vehicle v = searchById(id);
         if (v == null) {
-            System.out.println(RED+"Vehicle not found!"+RESET);
+            System.out.println(RED + "Vehicle not found!" + RESET);
             return;
         }
         if (!v.isAvailable()) {
-            System.out.println(RED+"Vehicle is already rented!"+RESET);
+            System.out.println(RED + "Vehicle is already rented!" + RESET);
             return;
         }
 
@@ -167,7 +198,7 @@ public class RentalApp {
 
         v.rentVehicle();
         totalIncome += v.calculateRentalCost(days);
-        System.out.println("Rental cost: Rs."+YELLOW + v.calculateRentalCost(days)+RESET);
+        System.out.println("Rental cost: Rs." + YELLOW + v.calculateRentalCost(days) + RESET);
 
         FileManager.save(vehicles, totalIncome);
     }
@@ -180,12 +211,11 @@ public class RentalApp {
         String id = sc.nextLine();
         Vehicle v = searchById(id);
         if (v == null) {
-            System.out.println(RED+"Vehicle not found!"+RESET);
+            System.out.println(RED + "Vehicle not found!" + RESET);
             return;
         }
 
         v.returnVehicle();
-
         FileManager.save(vehicles, totalIncome);
     }
 
@@ -193,11 +223,16 @@ public class RentalApp {
         System.out.print("Enter Vehicle ID to search: ");
         String id = sc.nextLine();
         Vehicle v = searchById(id);
+        System.out.println(" ");
+        System.out.println(" ");
+        System.out.println(" ");
         if (v == null) {
             System.out.println("Vehicle not found!");
         } else {
             v.displayDetails();
-        }
+        }System.out.println(" ");
+        System.out.println(" ");
+        System.out.println(" ");
     }
 
     private static Vehicle searchById(String id) {
