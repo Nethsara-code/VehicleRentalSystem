@@ -3,7 +3,7 @@ import java.util.ArrayList;
 
 public class FileManager {
 
-    private static final String FILE_NAME = "data.txt";
+    private static final String FILE_NAME = "../data.txt";
 
     public static void save(ArrayList<Vehicle> vehicles, double income) {
         try (PrintWriter pw = new PrintWriter(new FileWriter(FILE_NAME))) {
