@@ -39,7 +39,8 @@ public class RentalApp {
 
             drawBox(menu);
             System.out.print("Enter your choice: ");
-
+            final String YELLOW = "\u001B[33m";
+            final String RESET = "\u001B[0m";
             try {
                 choice = Integer.parseInt(sc.nextLine());
                 System.out.println();
@@ -53,7 +54,7 @@ public class RentalApp {
                     case 3 -> rentVehicle(sc);
                     case 4 -> returnVehicle(sc);
                     case 5 -> searchVehicle(sc);
-                    case 6 -> System.out.println("Total Rental Income: Rs." + totalIncome);
+                    case 6 -> System.out.println("Total Rental Income: Rs."+YELLOW + totalIncome+RESET);
                     case 7 -> {
                         FileManager.save(vehicles, totalIncome);
                         System.out.println("Exiting and saving data...");

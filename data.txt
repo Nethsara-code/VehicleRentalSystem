@@ -1,6 +1,7 @@
-65875.0
+103375.0
 Car,C001,BMW,i8,3000.0,false
 Bike,B001,aslkdh,lsadas,4000.0,true
 Bike,B002,YAHAMA,WRX,6000.0,false
 Van,V001,DOLPING,PG5,500.0,true
 Bike,B003,YAHAMA,Dio,3000.0,false
+Bike,B004,BMW,Ninja,7000.0,false
