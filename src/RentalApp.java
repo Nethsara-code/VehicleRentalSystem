@@ -138,15 +138,23 @@ public class RentalApp {
     }
 
     private static void rentVehicle(Scanner sc) {
+
+        final String RESET = "\u001B[0m";
+        final String GREEN = "\u001B[32m";
+        final String RED = "\u001B[31m";
+        final String BLUE = "\u001B[34m";
+        final String CYAN = "\u001B[36m";
+        final String YELLOW = "\u001B[33m";
+
         System.out.print("Enter Vehicle ID to rent: ");
         String id = sc.nextLine();
         Vehicle v = searchById(id);
         if (v == null) {
-            System.out.println("Vehicle not found!");
+            System.out.println(RED+"Vehicle not found!"+RESET);
             return;
         }
         if (!v.isAvailable()) {
-            System.out.println("Vehicle is already rented!");
+            System.out.println(RED+"Vehicle is already rented!"+RESET);
             return;
         }
 
@@ -159,17 +167,20 @@ public class RentalApp {
 
         v.rentVehicle();
         totalIncome += v.calculateRentalCost(days);
-        System.out.println("Rental cost: " + v.calculateRentalCost(days));
+        System.out.println("Rental cost: Rs."+YELLOW + v.calculateRentalCost(days)+RESET);
 
         FileManager.save(vehicles, totalIncome);
     }
 
     private static void returnVehicle(Scanner sc) {
+        final String RESET = "\u001B[0m";
+        final String RED = "\u001B[31m";
+
         System.out.print("Enter Vehicle ID to return: ");
         String id = sc.nextLine();
         Vehicle v = searchById(id);
         if (v == null) {
-            System.out.println("Vehicle not found!");
+            System.out.println(RED+"Vehicle not found!"+RESET);
             return;
         }
 
