@@ -19,14 +19,13 @@ public class RentalApp {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
-        bigHeading("Vehicle Rental System");
-//        printBlockCentered(TextArt::showBanner);
-        gap(2);
-
         totalIncome = FileManager.load(vehicles);
 
         int choice;
         do {
+            clearScreen();
+            bigHeading("Vehicle Rental System");
+
             sectionHeading("Main Menu");
 
             String[] menu = {
@@ -42,34 +41,52 @@ public class RentalApp {
             drawBoxCentered(menu);
             gap(1);
 
-            text("Enter your choice: ");
+            String choiceStr = inputCentered("Enter your choice: ", sc);
+
             try {
-                choice = Integer.parseInt(sc.nextLine());
-                gap(2);
+                choice = Integer.parseInt(choiceStr);
 
                 switch (choice) {
-                    case 1 -> addVehicle(sc);
-                    case 2 -> viewVehicles();
-                    case 3 -> rentVehicle(sc);
-                    case 4 -> returnVehicle(sc);
-                    case 5 -> searchVehicle(sc);
-                    case 6 -> text("Total Rental Income : Rs. " + YELLOW + totalIncome + RESET);
+                    case 1 -> openScene("Add New Vehicle", () -> addVehicle(sc));
+                    case 2 -> openScene("View Vehicles", RentalApp::viewVehicles);
+                    case 3 -> openScene("Rent Vehicle", () -> rentVehicle(sc));
+                    case 4 -> openScene("Return Vehicle", () -> returnVehicle(sc));
+                    case 5 -> openScene("Search Vehicle", () -> searchVehicle(sc));
+                    case 6 -> openScene("Total Income",
+                            () -> text("Total Rental Income : Rs. " + YELLOW + totalIncome + RESET));
                     case 7 -> {
                         FileManager.save(vehicles, totalIncome);
                         text("Exiting and saving data...");
                     }
-                    default -> text("Invalid choice! Please try again.");
+                    default -> openScene("Error", () -> text("Invalid choice!"));
                 }
+
             } catch (Exception e) {
-                text("Invalid input! Please enter a number.");
                 choice = 0;
             }
-
-            gap(2);
 
         } while (choice != 7);
 
         sc.close();
+    }
+
+    
+
+    private static void openScene(String title, Runnable content) {
+        clearScreen();
+        bigHeading(title);
+        content.run();
+        gap(2);
+        printlnC(PURPLE + "Press ENTER to return to Main Menu..." + RESET);
+        new Scanner(System.in).nextLine();
+    }
+
+    private static void clearScreen() {
+        try {
+            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+        } catch (Exception e) {
+            System.out.println("\n".repeat(50));
+        }
     }
 
 
@@ -80,33 +97,28 @@ public class RentalApp {
         System.out.println(" ".repeat(pad) + text);
     }
 
-    private static void printBlockCentered(Runnable block) {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        java.io.PrintStream old = System.out;
-        System.setOut(new java.io.PrintStream(baos));
-
-        block.run();
-
-        System.out.flush();
-        System.setOut(old);
-
-        for (String line : baos.toString().split("\n")) {
-            printlnC(line);
-        }
+    private static String inputCentered(String prompt, Scanner sc) {
+        int pad = (CMD_WIDTH - stripAnsi(prompt).length()) / 2;
+        if (pad < 0) pad = 0;
+        System.out.print(" ".repeat(pad) + prompt);
+        return sc.nextLine();
     }
 
     private static String stripAnsi(String s) {
         return s.replaceAll("\u001B\\[[;\\d]*m", "");
     }
 
-    //  STYLING
+    private static void gap(int lines) {
+        for (int i = 0; i < lines; i++) System.out.println();
+    }
+
+
 
     private static void bigHeading(String text) {
         String line = "=".repeat(text.length() + 12);
         printlnC(CYAN + line + RESET);
         printlnC(CYAN + "===   " + BOLD + text.toUpperCase() + RESET + CYAN + "   ===" + RESET);
         printlnC(CYAN + line + RESET);
-        gap(2);
     }
 
     private static void sectionHeading(String text) {
@@ -118,58 +130,34 @@ public class RentalApp {
         printlnC(text);
     }
 
-    private static void gap(int lines) {
-        for (int i = 0; i < lines; i++) System.out.println();
-    }
-
-    // BOX
-
     private static void drawBoxCentered(String[] lines) {
         int width = 0;
         for (String l : lines)
             width = Math.max(width, stripAnsi(l).length());
 
-        int boxWidth = width + 4;
-        int pad = (CMD_WIDTH - boxWidth) / 2;
+        int pad = (CMD_WIDTH - (width + 4)) / 2;
         if (pad < 0) pad = 0;
 
         String p = " ".repeat(pad);
 
         System.out.println(p + "┌" + "─".repeat(width + 2) + "┐");
         for (String l : lines) {
-            int space = width - stripAnsi(l).length();
-            System.out.println(p + "│ " + l + " ".repeat(space) + " │");
+            System.out.println(p + "│ " + l + " ".repeat(width - stripAnsi(l).length()) + " │");
         }
         System.out.println(p + "└" + "─".repeat(width + 2) + "┘");
     }
 
-    // PROGRESS BAR
 
-    private static void showProgressBar(String message, int seconds) {
-        int barLength = 20;
-        int totalSteps = seconds * 20;
 
-        for (int i = 0; i <= totalSteps; i++) {
-            int filled = (i * barLength) / totalSteps;
-            int percent = (i * 100) / totalSteps;
-
-            String bar = "[" +
-                    "#".repeat(filled) +
-                    "-".repeat(barLength - filled) +
-                    "] " + percent + "%";
-
-            String text = message + " " + bar;
-
-            int pad = (CMD_WIDTH - stripAnsi(text).length()) / 2;
-            if (pad < 0) pad = 0;
-
-            System.out.print("\r" + " ".repeat(pad) + text);
-
-            try {
-                Thread.sleep(1000 / 20);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+    private static void showProgressBar(String msg, int seconds) {
+        int len = 20, steps = seconds * 20;
+        for (int i = 0; i <= steps; i++) {
+            int f = (i * len) / steps;
+            int p = (i * 100) / steps;
+            String bar = "[" + "#".repeat(f) + "-".repeat(len - f) + "] " + p + "%";
+            String t = msg + " " + bar;
+            System.out.print("\r" + " ".repeat((CMD_WIDTH - t.length()) / 2) + t);
+            try { Thread.sleep(50); } catch (Exception ignored) {}
         }
         System.out.println();
     }
@@ -179,49 +167,32 @@ public class RentalApp {
     private static void addVehicle(Scanner sc) {
         sectionHeading("Add New Vehicle");
 
-        text("Enter type (Car/Bike/Van): ");
-        String type = sc.nextLine();
-
-        text("Enter Vehicle ID: ");
-        String id = sc.nextLine();
+        String type = inputCentered("Enter type (Car/Bike/Van): ", sc);
+        String id = inputCentered("Enter Vehicle ID: ", sc);
 
         if (searchById(id) != null) {
             text("Vehicle ID already exists!");
             return;
         }
 
-        text("Enter Brand: ");
-        String brand = sc.nextLine();
-
-        text("Enter Model: ");
-        String model = sc.nextLine();
-
-        text("Enter Base Rate: ");
-        double rate = Double.parseDouble(sc.nextLine());
+        String brand = inputCentered("Enter Brand: ", sc);
+        String model = inputCentered("Enter Model: ", sc);
+        double rate = Double.parseDouble(inputCentered("Enter Base Rate: ", sc));
 
         Vehicle v = switch (type.toLowerCase()) {
-            case "car" -> {
-                text("Enter number of seats: ");
-                yield new Car(id, brand, model, rate, Integer.parseInt(sc.nextLine()));
-            }
-            case "bike" -> {
-                text("Enter engine capacity CC: ");
-                yield new Bike(id, brand, model, rate, Integer.parseInt(sc.nextLine()));
-            }
-            case "van" -> {
-                text("Enter cargo capacity kg: ");
-                yield new Van(id, brand, model, rate, Double.parseDouble(sc.nextLine()));
-            }
+            case "car" -> new Car(id, brand, model, rate,
+                    Integer.parseInt(inputCentered("Enter seats: ", sc)));
+            case "bike" -> new Bike(id, brand, model, rate,
+                    Integer.parseInt(inputCentered("Enter engine CC: ", sc)));
+            case "van" -> new Van(id, brand, model, rate,
+                    Double.parseDouble(inputCentered("Enter cargo kg: ", sc)));
             default -> null;
         };
-            //process bar
+
         if (v != null) {
             showProgressBar("Adding vehicle", 3);
-
             vehicles.add(v);
             FileManager.save(vehicles, totalIncome);
-
-            gap(1);
             text(GREEN + "Vehicle added successfully!" + RESET);
         }
     }
@@ -232,87 +203,55 @@ public class RentalApp {
             return;
         }
 
-        bigHeading("Vehicle List");
+        System.out.println(YELLOW + "================ Vehicle List ================" + RESET);
+        System.out.printf("%-10s %-12s %-12s %-10s %-10s\n",
+                "ID", "Brand", "Model", "Rate", "Available");
+        System.out.println("----------------------------------------------------------");
 
-        printBlockCentered(() -> {
-            System.out.println(YELLOW + "================ Vehicle List ================" + RESET);
-            System.out.printf("%-10s %-12s %-12s %-10s %-10s\n",
-                    "ID", "Brand", "Model", "Rate", "Available");
-            System.out.println("----------------------------------------------------------");
-
-            for (Vehicle v : vehicles) {
-                System.out.printf("%-10s %-12s %-12s %-10.2f %-10s\n",
-                        v.getVehicleId(),
-                        v.getBrand(),
-                        v.getModel(),
-                        v.getBaseRatePerDay(),
-                        v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
-                );
-            }
-        });
+        for (Vehicle v : vehicles) {
+            System.out.printf("%-10s %-12s %-12s %-10.2f %-10s\n",
+                    v.getVehicleId(), v.getBrand(), v.getModel(),
+                    v.getBaseRatePerDay(),
+                    v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET);
+        }
     }
 
     private static void rentVehicle(Scanner sc) {
-        sectionHeading("Rent Vehicle");
-
-        text("Enter Vehicle ID to rent: ");
-        String id = sc.nextLine();
-
+        String id = inputCentered("Enter Vehicle ID to rent: ", sc);
         Vehicle v = searchById(id);
         if (v == null || !v.isAvailable()) {
-            text(RED + "Vehicle not available!" + RESET);
+            text("Vehicle not available!");
             return;
         }
-
-        text("Enter number of rental days: ");
-        int days = Integer.parseInt(sc.nextLine());
-
+        int days = Integer.parseInt(inputCentered("Enter rental days: ", sc));
         v.rentVehicle();
         double cost = v.calculateRentalCost(days);
         totalIncome += cost;
-
         FileManager.save(vehicles, totalIncome);
-        text("Rental cost : Rs. " + YELLOW + cost + RESET);
+        text("Rental cost: Rs. " + cost);
     }
 
     private static void returnVehicle(Scanner sc) {
-        sectionHeading("Return Vehicle");
-
-        text("Enter Vehicle ID to return: ");
-        String id = sc.nextLine();
-
+        String id = inputCentered("Enter Vehicle ID to return: ", sc);
         Vehicle v = searchById(id);
-        if (v == null) {
-            text("Vehicle not found!");
-            return;
+        if (v != null) {
+            v.returnVehicle();
+            FileManager.save(vehicles, totalIncome);
+            text("Vehicle returned successfully!");
         }
-
-        v.returnVehicle();
-        FileManager.save(vehicles, totalIncome);
-        text(GREEN + "Vehicle returned successfully!" + RESET);
     }
 
     private static void searchVehicle(Scanner sc) {
-        sectionHeading("Search Vehicle");
-
-        text("Enter Vehicle ID to search: ");
-        String id = sc.nextLine();
-        gap(1);
-
+        String id = inputCentered("Enter Vehicle ID: ", sc);
         Vehicle v = searchById(id);
-        if (v == null) {
-            text("Vehicle not found!");
-        } else {
-            printBlockCentered(v::displayDetails);
-        }
+        if (v == null) text("Vehicle not found!");
+        else v.displayDetails();
     }
 
     private static Vehicle searchById(String id) {
-        for (Vehicle v : vehicles) {
-            if (v.getVehicleId().equalsIgnoreCase(id)) {
+        for (Vehicle v : vehicles)
+            if (v.getVehicleId().equalsIgnoreCase(id))
                 return v;
-            }
-        }
         return null;
     }
 }
