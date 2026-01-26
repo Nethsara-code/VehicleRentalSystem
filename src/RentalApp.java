@@ -53,7 +53,7 @@ public class RentalApp {
                     case 3 -> openScene("Rent Vehicle", () -> rentVehicle(sc));
                     case 4 -> openScene("Return Vehicle", () -> returnVehicle(sc));
                     case 5 -> openScene("Search Vehicle", () -> searchVehicle(sc));
-                    case 6 -> text("Total Rental Income : Rs. " + YELLOW + totalIncome + RESET);
+                    case 6 -> openScene("Total Rental Income", RentalApp::viewTotalIncomeStats);
                     case 7 -> {
                         FileManager.save(vehicles, totalIncome);
                         text("Exiting and saving data...");
@@ -183,14 +183,33 @@ public class RentalApp {
         }
     }
 
-    // ================= ADD VEHICLE =================
+    // ================= ADD VEHICLE (WITH MENU) =================
 
     private static void addVehicleInner(Scanner sc) {
         sectionHeading("Add New Vehicle");
 
-        String type = inputCentered("Enter type (Car/Bike/Van): ", sc);
-        String id = inputCentered("Enter Vehicle ID: ", sc);
+        // ===== SELECT VEHICLE TYPE =====
+        String[] vehicleTypes = { "1. Car", "2. Bike", "3. Van" };
+        drawBoxCentered(vehicleTypes);
 
+        int typeChoice = 0;
+        do {
+            try {
+                String choiceStr = inputCentered("Select Vehicle Type (1-3): ", sc);
+                typeChoice = Integer.parseInt(choiceStr);
+            } catch (Exception e) {
+                typeChoice = 0;
+            }
+        } while (typeChoice < 1 || typeChoice > 3);
+
+        String type = switch (typeChoice) {
+            case 1 -> "car";
+            case 2 -> "bike";
+            case 3 -> "van";
+            default -> "";
+        };
+
+        String id = inputCentered("Enter Vehicle ID: ", sc);
         if (searchById(id) != null) {
             text("Vehicle ID already exists!");
             return;
@@ -260,12 +279,31 @@ public class RentalApp {
         }
     }
 
-    // ================= RENT VEHICLE (WITH RECEIPT) =================
+    // ================= RENT VEHICLE (WITH MENU) =================
 
     private static void rentVehicle(Scanner sc) {
         sectionHeading("Rent Vehicle");
 
-        String type = inputCentered("Select Vehicle Type (Car/Bike/Van): ", sc).toLowerCase();
+        // ===== SELECT VEHICLE TYPE =====
+        String[] vehicleTypes = { "1. Car", "2. Bike", "3. Van" };
+        drawBoxCentered(vehicleTypes);
+
+        int typeChoice = 0;
+        do {
+            try {
+                String choiceStr = inputCentered("Select Vehicle Type (1-3): ", sc);
+                typeChoice = Integer.parseInt(choiceStr);
+            } catch (Exception e) {
+                typeChoice = 0;
+            }
+        } while (typeChoice < 1 || typeChoice > 3);
+
+        String type = switch (typeChoice) {
+            case 1 -> "car";
+            case 2 -> "bike";
+            case 3 -> "van";
+            default -> "";
+        };
 
         Class<?> selectedType = switch (type) {
             case "car" -> Car.class;
@@ -397,5 +435,31 @@ public class RentalApp {
             if (v.getVehicleId().equalsIgnoreCase(id))
                 return v;
         return null;
+    }
+
+    // ================= TOTAL INCOME + VEHICLE STATS =================
+
+    private static void viewTotalIncomeStats() {
+        text("Total Rental Income : Rs. " + YELLOW + totalIncome + RESET);
+        gap(1);
+
+        int carAvailable = 0, carRented = 0;
+        int bikeAvailable = 0, bikeRented = 0;
+        int vanAvailable = 0, vanRented = 0;
+
+        for (Vehicle v : vehicles) {
+            if (v instanceof Car) {
+                if (v.isAvailable()) carAvailable++; else carRented++;
+            } else if (v instanceof Bike) {
+                if (v.isAvailable()) bikeAvailable++; else bikeRented++;
+            } else if (v instanceof Van) {
+                if (v.isAvailable()) vanAvailable++; else vanRented++;
+            }
+        }
+
+        printlnC(BOLD + CYAN + "=== VEHICLE RENTAL STATS ===" + RESET);
+        printlnC(String.format("Cars   : Rented = %d, Available = %d", carRented, carAvailable));
+        printlnC(String.format("Bikes  : Rented = %d, Available = %d", bikeRented, bikeAvailable));
+        printlnC(String.format("Vans   : Rented = %d, Available = %d", vanRented, vanAvailable));
     }
 }
