@@ -52,7 +52,7 @@ public class RentalApp {
                     case 2 -> openScene("Vehicle List", RentalApp::viewVehicles);
                     case 3 -> openScene("Rent Vehicle", () -> rentVehicle(sc));
                     case 4 -> openScene("Return Vehicle", () -> returnVehicle(sc));
-                    case 5 -> openScene("Search Vehicle", () -> searchVehicle(sc));
+                    case 5 -> searchVehicle(sc);
                     case 6 -> text("Total Rental Income : Rs. " + YELLOW + totalIncome + RESET);
                     case 7 -> {
                         FileManager.save(vehicles, totalIncome);
@@ -72,7 +72,7 @@ public class RentalApp {
         sc.close();
     }
 
-    //  NEW SCENE
+    // ================= NEW SCENE =================
 
     private static void openScene(String title, Runnable content) {
         clearScreen();
@@ -85,12 +85,11 @@ public class RentalApp {
     }
 
     private static void clearScreen() {
-
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
 
-    //  CENTER HELPERS
+    // ================= CENTER HELPERS =================
 
     private static void printlnC(String text) {
         int pad = (CMD_WIDTH - stripAnsi(text).length()) / 2;
@@ -114,7 +113,7 @@ public class RentalApp {
         for (int i = 0; i < lines; i++) System.out.println();
     }
 
-    //  STYLING
+    // ================= STYLING =================
 
     private static void bigHeading(String text) {
         String line = "=".repeat(text.length() + 12);
@@ -132,7 +131,7 @@ public class RentalApp {
         printlnC(text);
     }
 
-    //  BOX
+    // ================= BOX =================
 
     private static void drawBoxCentered(String[] lines) {
         int width = 0;
@@ -153,7 +152,7 @@ public class RentalApp {
         System.out.println(p + "└" + "─".repeat(width + 2) + "┘");
     }
 
-    //  PROGRESS BAR
+    // ================= PROGRESS BAR =================
 
     private static void showProgressBar(String message, int seconds) {
         int barLength = 20;
@@ -180,13 +179,13 @@ public class RentalApp {
 
         System.out.println();
         try {
-            Thread.sleep(700);
+            Thread.sleep(700); // keep final bar visible
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-    // ADD VEHICLE
+    // ================= ADD VEHICLE =================
 
     private static void addVehicleInner(Scanner sc) {
         sectionHeading("Add New Vehicle");
@@ -218,11 +217,11 @@ public class RentalApp {
             vehicles.add(v);
             FileManager.save(vehicles, totalIncome);
             gap(1);
-            text(GREEN + " Vehicle added successfully!" + RESET);
+            text(GREEN + "✔ Vehicle added successfully!" + RESET);
         }
     }
 
-
+    // ================= VIEW VEHICLES =================
 
     private static void viewVehicles() {
         if (vehicles.isEmpty()) {
@@ -230,26 +229,35 @@ public class RentalApp {
             return;
         }
 
-        bigHeading("Vehicle List");
-
-        System.out.println(YELLOW + "================ Vehicle List ================" + RESET);
-        System.out.printf("%-10s %-12s %-12s %-10s %-10s\n",
+        String headers = String.format("%-10s %-12s %-12s %-10s %-10s",
                 "ID", "Brand", "Model", "Rate", "Available");
-        System.out.println("----------------------------------------------------------");
+        int tableWidth = stripAnsi(headers).length();
+        int pad = (CMD_WIDTH - tableWidth) / 2;
+        if (pad < 0) pad = 0;
+
+        System.out.println(" ".repeat(pad) + BOLD + headers + RESET);
+        System.out.println(" ".repeat(pad) + "-".repeat(tableWidth));
 
         for (Vehicle v : vehicles) {
-            System.out.printf("%-10s %-12s %-12s %-10.2f %-10s\n",
+            String row = String.format("%-10s %-12s %-12s %-10.2f %-10s",
                     v.getVehicleId(),
                     v.getBrand(),
                     v.getModel(),
                     v.getBaseRatePerDay(),
                     v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
             );
+            System.out.println(" ".repeat(pad) + row);
         }
     }
 
+    // ================= OTHER FEATURES =================
+
     private static void rentVehicle(Scanner sc) {
         sectionHeading("Rent Vehicle");
+
+        // **Show all vehicles table before renting**
+        viewVehicles();
+        gap(1);
 
         String id = inputCentered("Enter Vehicle ID to rent: ", sc);
         Vehicle v = searchById(id);
@@ -260,6 +268,9 @@ public class RentalApp {
         }
 
         int days = Integer.parseInt(inputCentered("Enter number of rental days: ", sc));
+
+        showProgressBar("Calculating rental cost", 2);
+
         v.rentVehicle();
         double cost = v.calculateRentalCost(days);
         totalIncome += cost;
@@ -279,22 +290,42 @@ public class RentalApp {
             return;
         }
 
+        showProgressBar("Processing vehicle return", 2);
+
         v.returnVehicle();
         FileManager.save(vehicles, totalIncome);
         text(GREEN + "Vehicle returned successfully!" + RESET);
     }
 
     private static void searchVehicle(Scanner sc) {
-        sectionHeading("Search Vehicle");
+        openScene("Search Vehicle", () -> {
+            String id = inputCentered("Enter Vehicle ID to search: ", sc);
+            Vehicle v = searchById(id);
 
-        String id = inputCentered("Enter Vehicle ID to search: ", sc);
-        Vehicle v = searchById(id);
+            gap(1);
 
-        if (v == null) {
-            text("Vehicle not found!");
-        } else {
-            v.displayDetails();
-        }
+            if (v == null) {
+                text(RED + "Vehicle not found!" + RESET);
+            } else {
+                String headers = String.format("%-10s %-12s %-12s %-10s %-10s",
+                        "ID", "Brand", "Model", "Rate", "Available");
+                int tableWidth = stripAnsi(headers).length();
+                int pad = (CMD_WIDTH - tableWidth) / 2;
+                if (pad < 0) pad = 0;
+
+                System.out.println(" ".repeat(pad) + BOLD + headers + RESET);
+                System.out.println(" ".repeat(pad) + "-".repeat(tableWidth));
+
+                String row = String.format("%-10s %-12s %-12s %-10.2f %-10s",
+                        v.getVehicleId(),
+                        v.getBrand(),
+                        v.getModel(),
+                        v.getBaseRatePerDay(),
+                        v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
+                );
+                System.out.println(" ".repeat(pad) + row);
+            }
+        });
     }
 
     private static Vehicle searchById(String id) {

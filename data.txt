@@ -1,4 +1,4 @@
-118375.0
+1020375.0
 Car,C001,BMW,i8,3000.0,false
 Bike,B001,aslkdh,lsadas,4000.0,true
 Bike,B002,YAHAMA,WRX,6000.0,false
@@ -10,3 +10,6 @@ Car,C005,BMW,F45,8008.0,true
 Car,Car,B008,Bi9,8000.0,true
 Van,V009,jashd,saidgh,90000.0,true
 Van,V010,skajhd,ladhs,9000.0,true
+Car,C010,asdsa,asdas,9000.0,true
+Bike,B100,asd,sadgf,7000.0,false
+Car,C9090,aslkd,asdhas,90000.0,true

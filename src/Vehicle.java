@@ -75,7 +75,7 @@ public abstract class Vehicle {
     public void returnVehicle() {
         if(!isAvailable) {
             isAvailable = true;
-            System.out.println("Vehicle returned successfully.");
+
         } else {
             System.out.println("Vehicle was not rented!");
         }
