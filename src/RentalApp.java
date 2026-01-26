@@ -52,7 +52,7 @@ public class RentalApp {
                     case 2 -> openScene("Vehicle List", RentalApp::viewVehicles);
                     case 3 -> openScene("Rent Vehicle", () -> rentVehicle(sc));
                     case 4 -> openScene("Return Vehicle", () -> returnVehicle(sc));
-                    case 5 -> searchVehicle(sc);
+                    case 5 -> openScene("Search Vehicle", () -> searchVehicle(sc));
                     case 6 -> text("Total Rental Income : Rs. " + YELLOW + totalIncome + RESET);
                     case 7 -> {
                         FileManager.save(vehicles, totalIncome);
@@ -72,7 +72,7 @@ public class RentalApp {
         sc.close();
     }
 
-    // ================= NEW SCENE =================
+    // ================= SCENE =================
 
     private static void openScene(String title, Runnable content) {
         clearScreen();
@@ -100,7 +100,6 @@ public class RentalApp {
     private static String inputCentered(String prompt, Scanner sc) {
         int pad = (CMD_WIDTH - stripAnsi(prompt).length()) / 2;
         if (pad < 0) pad = 0;
-
         System.out.print(" ".repeat(pad) + prompt);
         return sc.nextLine();
     }
@@ -176,7 +175,6 @@ public class RentalApp {
                 Thread.currentThread().interrupt();
             }
         }
-
         System.out.println();
         try {
             Thread.sleep(700); // keep final bar visible
@@ -216,7 +214,6 @@ public class RentalApp {
             showProgressBar("Adding vehicle", 3);
             vehicles.add(v);
             FileManager.save(vehicles, totalIncome);
-            gap(1);
             text(GREEN + "✔ Vehicle added successfully!" + RESET);
         }
     }
@@ -229,40 +226,67 @@ public class RentalApp {
             return;
         }
 
+        showVehicleTableByType("CAR", Car.class);
+        gap(1);
+        showVehicleTableByType("BIKE", Bike.class);
+        gap(1);
+        showVehicleTableByType("VAN", Van.class);
+    }
+
+    private static void showVehicleTableByType(String title, Class<?> type) {
+        printlnC(BOLD + CYAN + "=== " + title + " LIST ===" + RESET);
+        gap(1);
+
         String headers = String.format("%-10s %-12s %-12s %-10s %-10s",
                 "ID", "Brand", "Model", "Rate", "Available");
+
         int tableWidth = stripAnsi(headers).length();
         int pad = (CMD_WIDTH - tableWidth) / 2;
-        if (pad < 0) pad = 0;
 
         System.out.println(" ".repeat(pad) + BOLD + headers + RESET);
         System.out.println(" ".repeat(pad) + "-".repeat(tableWidth));
 
         for (Vehicle v : vehicles) {
-            String row = String.format("%-10s %-12s %-12s %-10.2f %-10s",
-                    v.getVehicleId(),
-                    v.getBrand(),
-                    v.getModel(),
-                    v.getBaseRatePerDay(),
-                    v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
-            );
-            System.out.println(" ".repeat(pad) + row);
+            if (type.isInstance(v)) {
+                String row = String.format("%-10s %-12s %-12s %-10.2f %-10s",
+                        v.getVehicleId(),
+                        v.getBrand(),
+                        v.getModel(),
+                        v.getBaseRatePerDay(),
+                        v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
+                );
+                System.out.println(" ".repeat(pad) + row);
+            }
         }
     }
 
-    // ================= OTHER FEATURES =================
+    // ================= RENT VEHICLE (WITH RECEIPT) =================
 
     private static void rentVehicle(Scanner sc) {
         sectionHeading("Rent Vehicle");
 
-        // **Show all vehicles table before renting**
-        viewVehicles();
+        String type = inputCentered("Select Vehicle Type (Car/Bike/Van): ", sc).toLowerCase();
+
+        Class<?> selectedType = switch (type) {
+            case "car" -> Car.class;
+            case "bike" -> Bike.class;
+            case "van" -> Van.class;
+            default -> null;
+        };
+
+        if (selectedType == null) {
+            text(RED + "Invalid vehicle type!" + RESET);
+            return;
+        }
+
+        gap(1);
+        showAvailableVehiclesByType(type.toUpperCase(), selectedType);
         gap(1);
 
         String id = inputCentered("Enter Vehicle ID to rent: ", sc);
         Vehicle v = searchById(id);
 
-        if (v == null || !v.isAvailable()) {
+        if (v == null || !selectedType.isInstance(v) || !v.isAvailable()) {
             text(RED + "Vehicle not available!" + RESET);
             return;
         }
@@ -274,10 +298,52 @@ public class RentalApp {
         v.rentVehicle();
         double cost = v.calculateRentalCost(days);
         totalIncome += cost;
-
         FileManager.save(vehicles, totalIncome);
+
+        text(GREEN + "✔ Vehicle rented successfully!" + RESET);
         text("Rental cost : Rs. " + YELLOW + cost + RESET);
+
+        // ================= PRINT RECEIPT =================
+        gap(1);
+        printlnC(BOLD + CYAN + "========== RENTAL RECEIPT ==========" + RESET);
+        printlnC("Vehicle ID   : " + v.getVehicleId());
+        printlnC("Type         : " + type.toUpperCase());
+        printlnC("Brand        : " + v.getBrand());
+        printlnC("Model        : " + v.getModel());
+        printlnC("Rate per day : Rs. " + v.getBaseRatePerDay());
+        printlnC("Days Rented  : " + days);
+        printlnC("Total Cost   : Rs. " + cost);
+        printlnC(BOLD + CYAN + "==================================" + RESET);
     }
+
+    private static void showAvailableVehiclesByType(String title, Class<?> type) {
+        printlnC(BOLD + CYAN + "=== AVAILABLE " + title + " VEHICLES ===" + RESET);
+        gap(1);
+
+        String headers = String.format("%-10s %-12s %-12s %-10s %-10s",
+                "ID", "Brand", "Model", "Rate", "Available");
+
+        int tableWidth = stripAnsi(headers).length();
+        int pad = (CMD_WIDTH - tableWidth) / 2;
+
+        System.out.println(" ".repeat(pad) + BOLD + headers + RESET);
+        System.out.println(" ".repeat(pad) + "-".repeat(tableWidth));
+
+        for (Vehicle v : vehicles) {
+            if (type.isInstance(v) && v.isAvailable()) {
+                String row = String.format("%-10s %-12s %-12s %-10.2f %-10s",
+                        v.getVehicleId(),
+                        v.getBrand(),
+                        v.getModel(),
+                        v.getBaseRatePerDay(),
+                        GREEN + "Yes" + RESET
+                );
+                System.out.println(" ".repeat(pad) + row);
+            }
+        }
+    }
+
+    // ================= RETURN VEHICLE =================
 
     private static void returnVehicle(Scanner sc) {
         sectionHeading("Return Vehicle");
@@ -286,46 +352,44 @@ public class RentalApp {
         Vehicle v = searchById(id);
 
         if (v == null) {
-            text("Vehicle not found!");
+            text(RED + "Vehicle not found!" + RESET);
             return;
         }
 
         showProgressBar("Processing vehicle return", 2);
-
         v.returnVehicle();
         FileManager.save(vehicles, totalIncome);
-        text(GREEN + "Vehicle returned successfully!" + RESET);
+        text(GREEN + "✔ Vehicle returned successfully!" + RESET);
     }
 
+    // ================= SEARCH VEHICLE =================
+
     private static void searchVehicle(Scanner sc) {
-        openScene("Search Vehicle", () -> {
-            String id = inputCentered("Enter Vehicle ID to search: ", sc);
-            Vehicle v = searchById(id);
+        String id = inputCentered("Enter Vehicle ID to search: ", sc);
+        Vehicle v = searchById(id);
 
-            gap(1);
+        if (v == null) {
+            text(RED + "Vehicle not found!" + RESET);
+        } else {
+            // Table header
+            String headers = String.format("%-10s %-12s %-12s %-10s %-10s",
+                    "ID", "Brand", "Model", "Rate", "Available");
+            int tableWidth = stripAnsi(headers).length();
+            int pad = (CMD_WIDTH - tableWidth) / 2;
 
-            if (v == null) {
-                text(RED + "Vehicle not found!" + RESET);
-            } else {
-                String headers = String.format("%-10s %-12s %-12s %-10s %-10s",
-                        "ID", "Brand", "Model", "Rate", "Available");
-                int tableWidth = stripAnsi(headers).length();
-                int pad = (CMD_WIDTH - tableWidth) / 2;
-                if (pad < 0) pad = 0;
+            System.out.println(" ".repeat(pad) + BOLD + headers + RESET);
+            System.out.println(" ".repeat(pad) + "-".repeat(tableWidth));
 
-                System.out.println(" ".repeat(pad) + BOLD + headers + RESET);
-                System.out.println(" ".repeat(pad) + "-".repeat(tableWidth));
-
-                String row = String.format("%-10s %-12s %-12s %-10.2f %-10s",
-                        v.getVehicleId(),
-                        v.getBrand(),
-                        v.getModel(),
-                        v.getBaseRatePerDay(),
-                        v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
-                );
-                System.out.println(" ".repeat(pad) + row);
-            }
-        });
+            // Vehicle row
+            String row = String.format("%-10s %-12s %-12s %-10.2f %-10s",
+                    v.getVehicleId(),
+                    v.getBrand(),
+                    v.getModel(),
+                    v.getBaseRatePerDay(),
+                    v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
+            );
+            System.out.println(" ".repeat(pad) + row);
+        }
     }
 
     private static Vehicle searchById(String id) {
