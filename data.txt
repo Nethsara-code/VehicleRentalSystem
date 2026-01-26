@@ -8,3 +8,5 @@ Bike,B004,BMW,Ninja,7000.0,false
 Bike,B006,BMW,ib,7000.0,false
 Car,C005,BMW,F45,8008.0,true
 Car,Car,B008,Bi9,8000.0,true
+Van,V009,jashd,saidgh,90000.0,true
+Van,V010,skajhd,ladhs,9000.0,true
