@@ -6,10 +6,8 @@ public class RentalApp {
     private static ArrayList<Vehicle> vehicles = new ArrayList<>();
     private static double totalIncome = 0;
 
-    // ================== CMD CONFIG ==================
     private static final int CMD_WIDTH = 120;
 
-    // ================== COLORS & STYLES ==================
     private static final String RESET = "\u001B[0m";
     private static final String BOLD = "\u001B[1m";
     private static final String CYAN = "\u001B[36m";
@@ -18,12 +16,11 @@ public class RentalApp {
     private static final String GREEN = "\u001B[32m";
     private static final String RED = "\u001B[31m";
 
-    // ================== MAIN ==================
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
         bigHeading("Vehicle Rental System");
-        printBlockCentered(TextArt::showBanner);
+//        printBlockCentered(TextArt::showBanner);
         gap(2);
 
         totalIncome = FileManager.load(vehicles);
@@ -75,7 +72,7 @@ public class RentalApp {
         sc.close();
     }
 
-    // ================== UI CORE (CENTER ENGINE) ==================
+
 
     private static void printlnC(String text) {
         int pad = (CMD_WIDTH - stripAnsi(text).length()) / 2;
@@ -102,9 +99,8 @@ public class RentalApp {
         return s.replaceAll("\u001B\\[[;\\d]*m", "");
     }
 
-    // ================== STYLING HELPERS ==================
+    //  STYLING
 
-    // 1️⃣ Big Heading (font-size illusion)
     private static void bigHeading(String text) {
         String line = "=".repeat(text.length() + 12);
         printlnC(CYAN + line + RESET);
@@ -113,23 +109,20 @@ public class RentalApp {
         gap(2);
     }
 
-    // 2️⃣ Section Heading
     private static void sectionHeading(String text) {
         printlnC(PURPLE + BOLD + ">> " + text + " <<" + RESET);
         gap(1);
     }
 
-    // 3️⃣ Normal Text
     private static void text(String text) {
         printlnC(text);
     }
 
-    // 4️⃣ Auto Gaps
     private static void gap(int lines) {
         for (int i = 0; i < lines; i++) System.out.println();
     }
 
-    // ================== BOX ==================
+    // BOX
 
     private static void drawBoxCentered(String[] lines) {
         int width = 0;
@@ -150,7 +143,38 @@ public class RentalApp {
         System.out.println(p + "└" + "─".repeat(width + 2) + "┘");
     }
 
-    // ================== BUSINESS LOGIC (UNCHANGED) ==================
+    // PROGRESS BAR
+
+    private static void showProgressBar(String message, int seconds) {
+        int barLength = 20;
+        int totalSteps = seconds * 20;
+
+        for (int i = 0; i <= totalSteps; i++) {
+            int filled = (i * barLength) / totalSteps;
+            int percent = (i * 100) / totalSteps;
+
+            String bar = "[" +
+                    "#".repeat(filled) +
+                    "-".repeat(barLength - filled) +
+                    "] " + percent + "%";
+
+            String text = message + " " + bar;
+
+            int pad = (CMD_WIDTH - stripAnsi(text).length()) / 2;
+            if (pad < 0) pad = 0;
+
+            System.out.print("\r" + " ".repeat(pad) + text);
+
+            try {
+                Thread.sleep(1000 / 20);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        System.out.println();
+    }
+
+
 
     private static void addVehicle(Scanner sc) {
         sectionHeading("Add New Vehicle");
@@ -190,10 +214,14 @@ public class RentalApp {
             }
             default -> null;
         };
-
+            //process bar
         if (v != null) {
+            showProgressBar("Adding vehicle", 3);
+
             vehicles.add(v);
             FileManager.save(vehicles, totalIncome);
+
+            gap(1);
             text(GREEN + "Vehicle added successfully!" + RESET);
         }
     }
