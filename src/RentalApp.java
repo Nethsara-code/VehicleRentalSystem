@@ -1,10 +1,17 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.HashMap;
+import java.util.Random;
 
 public class RentalApp {
 
     private static ArrayList<Vehicle> vehicles = new ArrayList<>();
     private static double totalIncome = 0;
+
+    // ===== OTP & CUSTOMER DATA (RentalApp only) =====
+    private static HashMap<String, String> activeOtpMap = new HashMap<>();
+    private static HashMap<String, String> customerNameMap = new HashMap<>();
+    private static HashMap<String, String> customerIdMap = new HashMap<>();
 
     private static final int CMD_WIDTH = 120;
 
@@ -176,40 +183,23 @@ public class RentalApp {
             }
         }
         System.out.println();
-        try {
-            Thread.sleep(700); // keep final bar visible
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
-    // ================= ADD VEHICLE (WITH MENU) =================
+    // ================= OTP =================
+
+    private static String generateOTP() {
+        Random r = new Random();
+        return String.valueOf(100000 + r.nextInt(900000));
+    }
+
+    // ================= ADD VEHICLE =================
 
     private static void addVehicleInner(Scanner sc) {
         sectionHeading("Add New Vehicle");
 
-        // ===== SELECT VEHICLE TYPE =====
-        String[] vehicleTypes = { "1. Car", "2. Bike", "3. Van" };
-        drawBoxCentered(vehicleTypes);
-
-        int typeChoice = 0;
-        do {
-            try {
-                String choiceStr = inputCentered("Select Vehicle Type (1-3): ", sc);
-                typeChoice = Integer.parseInt(choiceStr);
-            } catch (Exception e) {
-                typeChoice = 0;
-            }
-        } while (typeChoice < 1 || typeChoice > 3);
-
-        String type = switch (typeChoice) {
-            case 1 -> "car";
-            case 2 -> "bike";
-            case 3 -> "van";
-            default -> "";
-        };
-
+        String type = inputCentered("Enter type (Car/Bike/Van): ", sc);
         String id = inputCentered("Enter Vehicle ID: ", sc);
+
         if (searchById(id) != null) {
             text("Vehicle ID already exists!");
             return;
@@ -279,31 +269,12 @@ public class RentalApp {
         }
     }
 
-    // ================= RENT VEHICLE (WITH MENU) =================
+    // ================= RENT VEHICLE (OTP) =================
 
     private static void rentVehicle(Scanner sc) {
         sectionHeading("Rent Vehicle");
 
-        // ===== SELECT VEHICLE TYPE =====
-        String[] vehicleTypes = { "1. Car", "2. Bike", "3. Van" };
-        drawBoxCentered(vehicleTypes);
-
-        int typeChoice = 0;
-        do {
-            try {
-                String choiceStr = inputCentered("Select Vehicle Type (1-3): ", sc);
-                typeChoice = Integer.parseInt(choiceStr);
-            } catch (Exception e) {
-                typeChoice = 0;
-            }
-        } while (typeChoice < 1 || typeChoice > 3);
-
-        String type = switch (typeChoice) {
-            case 1 -> "car";
-            case 2 -> "bike";
-            case 3 -> "van";
-            default -> "";
-        };
+        String type = inputCentered("Select Vehicle Type (Car/Bike/Van): ", sc).toLowerCase();
 
         Class<?> selectedType = switch (type) {
             case "car" -> Car.class;
@@ -329,28 +300,33 @@ public class RentalApp {
             return;
         }
 
+        String customerName = inputCentered("Enter Customer Name: ", sc);
+        String customerId = inputCentered("Enter Customer ID Card Number: ", sc);
+
         int days = Integer.parseInt(inputCentered("Enter number of rental days: ", sc));
 
-        showProgressBar("Calculating rental cost", 2);
+        showProgressBar("Processing rental", 2);
 
         v.rentVehicle();
         double cost = v.calculateRentalCost(days);
         totalIncome += cost;
+
+        String otp = generateOTP();
+        activeOtpMap.put(id, otp);
+        customerNameMap.put(id, customerName);
+        customerIdMap.put(id, customerId);
+
         FileManager.save(vehicles, totalIncome);
 
-        text(GREEN + "✔ Vehicle rented successfully!" + RESET);
-        text("Rental cost : Rs. " + YELLOW + cost + RESET);
-
-        // ================= PRINT RECEIPT =================
         gap(1);
         printlnC(BOLD + CYAN + "========== RENTAL RECEIPT ==========" + RESET);
-        printlnC("Vehicle ID   : " + v.getVehicleId());
-        printlnC("Type         : " + type.toUpperCase());
-        printlnC("Brand        : " + v.getBrand());
-        printlnC("Model        : " + v.getModel());
-        printlnC("Rate per day : Rs. " + v.getBaseRatePerDay());
-        printlnC("Days Rented  : " + days);
-        printlnC("Total Cost   : Rs. " + cost);
+        printlnC("Customer Name : " + customerName);
+        printlnC("Customer ID   : " + customerId);
+        printlnC("Vehicle ID    : " + v.getVehicleId());
+        printlnC("Vehicle Type  : " + type.toUpperCase());
+        printlnC("Days Rented   : " + days);
+        printlnC("Total Cost    : Rs. " + YELLOW + cost + RESET);
+        printlnC("RETURN OTP    : " + RED + otp + RESET);
         printlnC(BOLD + CYAN + "==================================" + RESET);
     }
 
@@ -381,7 +357,7 @@ public class RentalApp {
         }
     }
 
-    // ================= RETURN VEHICLE =================
+    // ================= RETURN VEHICLE (OTP CHECK) =================
 
     private static void returnVehicle(Scanner sc) {
         sectionHeading("Return Vehicle");
@@ -394,13 +370,30 @@ public class RentalApp {
             return;
         }
 
-        showProgressBar("Processing vehicle return", 2);
+        if (!activeOtpMap.containsKey(id)) {
+            text(RED + "OTP not found for this vehicle!" + RESET);
+            return;
+        }
+
+        String enteredOtp = inputCentered("Enter OTP: ", sc);
+
+        if (!enteredOtp.equals(activeOtpMap.get(id))) {
+            text(RED + "Invalid OTP! Return denied." + RESET);
+            return;
+        }
+
+        showProgressBar("Returning vehicle", 2);
         v.returnVehicle();
+
+        activeOtpMap.remove(id);
+        customerNameMap.remove(id);
+        customerIdMap.remove(id);
+
         FileManager.save(vehicles, totalIncome);
         text(GREEN + "✔ Vehicle returned successfully!" + RESET);
     }
 
-    // ================= SEARCH VEHICLE =================
+    // ================= SEARCH =================
 
     private static void searchVehicle(Scanner sc) {
         String id = inputCentered("Enter Vehicle ID to search: ", sc);
@@ -408,26 +401,26 @@ public class RentalApp {
 
         if (v == null) {
             text(RED + "Vehicle not found!" + RESET);
-        } else {
-            // Table header
-            String headers = String.format("%-10s %-12s %-12s %-10s %-10s",
-                    "ID", "Brand", "Model", "Rate", "Available");
-            int tableWidth = stripAnsi(headers).length();
-            int pad = (CMD_WIDTH - tableWidth) / 2;
-
-            System.out.println(" ".repeat(pad) + BOLD + headers + RESET);
-            System.out.println(" ".repeat(pad) + "-".repeat(tableWidth));
-
-            // Vehicle row
-            String row = String.format("%-10s %-12s %-12s %-10.2f %-10s",
-                    v.getVehicleId(),
-                    v.getBrand(),
-                    v.getModel(),
-                    v.getBaseRatePerDay(),
-                    v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
-            );
-            System.out.println(" ".repeat(pad) + row);
+            return;
         }
+
+        String headers = String.format("%-10s %-12s %-12s %-10s %-10s",
+                "ID", "Brand", "Model", "Rate", "Available");
+
+        int tableWidth = stripAnsi(headers).length();
+        int pad = (CMD_WIDTH - tableWidth) / 2;
+
+        System.out.println(" ".repeat(pad) + BOLD + headers + RESET);
+        System.out.println(" ".repeat(pad) + "-".repeat(tableWidth));
+
+        String row = String.format("%-10s %-12s %-12s %-10.2f %-10s",
+                v.getVehicleId(),
+                v.getBrand(),
+                v.getModel(),
+                v.getBaseRatePerDay(),
+                v.isAvailable() ? GREEN + "Yes" + RESET : RED + "No" + RESET
+        );
+        System.out.println(" ".repeat(pad) + row);
     }
 
     private static Vehicle searchById(String id) {
@@ -437,29 +430,9 @@ public class RentalApp {
         return null;
     }
 
-    // ================= TOTAL INCOME + VEHICLE STATS =================
+    // ================= STATS =================
 
     private static void viewTotalIncomeStats() {
         text("Total Rental Income : Rs. " + YELLOW + totalIncome + RESET);
-        gap(1);
-
-        int carAvailable = 0, carRented = 0;
-        int bikeAvailable = 0, bikeRented = 0;
-        int vanAvailable = 0, vanRented = 0;
-
-        for (Vehicle v : vehicles) {
-            if (v instanceof Car) {
-                if (v.isAvailable()) carAvailable++; else carRented++;
-            } else if (v instanceof Bike) {
-                if (v.isAvailable()) bikeAvailable++; else bikeRented++;
-            } else if (v instanceof Van) {
-                if (v.isAvailable()) vanAvailable++; else vanRented++;
-            }
-        }
-
-        printlnC(BOLD + CYAN + "=== VEHICLE RENTAL STATS ===" + RESET);
-        printlnC(String.format("Cars   : Rented = %d, Available = %d", carRented, carAvailable));
-        printlnC(String.format("Bikes  : Rented = %d, Available = %d", bikeRented, bikeAvailable));
-        printlnC(String.format("Vans   : Rented = %d, Available = %d", vanRented, vanAvailable));
     }
 }
