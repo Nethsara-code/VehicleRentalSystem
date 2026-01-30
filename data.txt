@@ -1,3 +1,6 @@
-106101.0
+1.19126338E8
 Car,3567,fdth,fdsh,34567.0,true
 Bike,4236,234,wt,2352.0,true
+Car,3457457,dsfh,asdga,321512.0,true
+Car,54377,redwggggggg,regrrrrrrrrrrrrrrr,436346.0,false
+Car,342446,fhdhfd,ghfkfghk,34433.0,false
