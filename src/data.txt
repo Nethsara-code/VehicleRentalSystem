@@ -1,3 +1,0 @@
-0.0
-Car,C001,BMW,i8,15000.0,true
-Bike,B001,YAMAHA,H2R,5000.0,true
