@@ -32,7 +32,7 @@ public class RentalAppGUI {
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setLocationRelativeTo(null);
 
-        ImageIcon originalIcon = new ImageIcon("D:\\VehicleRentalSystem\\src\\bg.jpg");
+        ImageIcon originalIcon = new ImageIcon("D:\\VehicleRentalSystem\\src\\car.jpg");
         Image scaledImage = originalIcon.getImage().getScaledInstance(
                 Toolkit.getDefaultToolkit().getScreenSize().width,
                 Toolkit.getDefaultToolkit().getScreenSize().height,

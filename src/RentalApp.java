@@ -269,7 +269,7 @@ public class RentalApp {
         }
     }
 
-    // ================= RENT VEHICLE (OTP) =================
+    // ================= RENT VEHICLE  =================
 
     private static void rentVehicle(Scanner sc) {
         sectionHeading("Rent Vehicle");
@@ -357,7 +357,7 @@ public class RentalApp {
         }
     }
 
-    // ================= RETURN VEHICLE (OTP CHECK) =================
+    //  RETURN VEHICLE //
 
     private static void returnVehicle(Scanner sc) {
         sectionHeading("Return Vehicle");
@@ -390,10 +390,10 @@ public class RentalApp {
         customerIdMap.remove(id);
 
         FileManager.save(vehicles, totalIncome);
-        text(GREEN + "✔ Vehicle returned successfully!" + RESET);
+        text(GREEN + " Vehicle returned successfully!" + RESET);
     }
 
-    // ================= SEARCH =================
+    //  SEARCH VEHICLE //
 
     private static void searchVehicle(Scanner sc) {
         String id = inputCentered("Enter Vehicle ID to search: ", sc);
@@ -430,9 +430,47 @@ public class RentalApp {
         return null;
     }
 
-    // ================= STATS =================
+    // Viewing total rental income //
 
     private static void viewTotalIncomeStats() {
-        text("Total Rental Income : Rs. " + YELLOW + totalIncome + RESET);
+
+        text("Total Rental Income : Rs. " + totalIncome);
+        gap(1);
+
+        if (activeOtpMap.isEmpty()) {
+            text("No vehicles currently rented.");
+            return;
+        }
+
+        printlnC("=== CURRENT RENTALS ===");
+        gap(1);
+
+        // Column headers without color
+        String headers = String.format("%-12s %-10s %-20s %-20s %-12s",
+                "VehicleID", "Type", "Customer Name", "Customer ID", "Cost");
+
+        int tableWidth = stripAnsi(headers).length();
+        int pad = (CMD_WIDTH - tableWidth) / 2;
+
+        System.out.println(" ".repeat(pad) + headers);
+        System.out.println(" ".repeat(pad) + "-".repeat(tableWidth));
+
+        for (String vid : activeOtpMap.keySet()) {
+            Vehicle v = searchById(vid);
+            if (v != null) {
+                String type = v.getClass().getSimpleName();
+                String name = customerNameMap.get(vid);
+                String id = customerIdMap.get(vid);
+                double cost = v.calculateRentalCost(1); // optionally store actual days if saved
+
+                String row = String.format("%-12s %-10s %-20s %-20s %-12.2f",
+                        vid, type, name, id, cost);
+
+                System.out.println(" ".repeat(pad) + row);
+            }
+        }
+
+        gap(2);
     }
+
 }
